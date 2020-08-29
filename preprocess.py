@@ -1,4 +1,5 @@
 import numpy as np
+from mojimoji import zen_to_han
 from sklearn.preprocessing import LabelEncoder
 
 from generate_feature import (built_year, walk_time, area1, area2, maguchi,
@@ -18,6 +19,7 @@ def category_encode(df, target_cols):
 
 
 def preprocess(df):
+    df = cleaning(df)
     df = built_year(df)
     df = walk_time(df)
     df = area1(df)
@@ -36,6 +38,12 @@ def preprocess(df):
     # df = landshape(df)
     # df = structure(df)
     # df = use(df)
+    return df
+
+
+def cleaning(df):
+    # zenkaku to hankaku
+    df['間取り'] = df['間取り'].map(zen_to_han)
     return df
 
 
