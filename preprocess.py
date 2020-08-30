@@ -15,7 +15,8 @@ def category_encode(df, target_cols):
 
 def preprocess(df):
     df = cleaning(df)
-    # df = period(df)
+    df = period(df)
+    df = elapsed_year(df)
     # df = region(df)
     df = total_floor_area_div_area(df)
     df = total_floor_area_per_floor(df)
@@ -133,14 +134,25 @@ def built_year(df):
 
 
 def period(df):
-    replace_dict = {'年第': '.',
-                    '四半期': '',
-                    '１': '0',
-                    '２': '25',
-                    '３': '50',
-                    '４': '75'}
-    df["Period"] = pd.to_numeric(df["Period"].replace(replace_dict),
-                                 errors='raise')
+    df["Period"] = df["Period"].apply(lambda x: jiten_convert(x))
+    return df
+
+
+# Reference:
+# https://github.com/katsu1110/ProbSpace-RealEstate2-MySolution/blob/7a292621b5ae6c6f70d510da64c314d964f4b474/code/feature_engineering.py#L122-L130
+def jiten_convert(x):
+    """
+    Bin 'deal timing'
+    """
+    try:
+        v = int(x[:4]) + float(x[6]) / 4
+    except:
+        v = np.nan
+    return v
+
+
+def elapsed_year(df):
+    df['ElapsedYear'] = df["Period"] - df['BuildingYear']
     return df
 
 
@@ -314,3 +326,58 @@ def extract_merge_key(df, col_name="AreaKey"):
     # 5で切り出しているのはpublished_land_priceと一致させるため
     df[col_name] = df[col_name].str[:5]
     return df
+
+
+# Reference:
+# https://github.com/Anguschang582/Probspace---Re_estate---1st-place-solution/blob/a232fbc255c6d63c2bc73b9835ed954ea209d671/function.R#L3-L24
+def beyond1std_ratio(x):
+    return np.sum(x > np.mean(x) + np.std(x)) / len(x)
+
+
+def iqr_ratio(x):
+    return np.quantile(x, 0.75) / np.quantile(x, 0.25)
+
+
+def mean_var(x):
+    return np.std(x) / np.mean(x)
+
+
+def range_diff(x):
+    return np.max(x) - np.min(x)
+
+
+def range_per(x):
+    return np.max(x) / np.min(x)
+
+
+def hl_ratio(x):
+    np_mean = np.mean(x)
+    return (np.sum(x > np_mean)) / (np.sum(~(x >= np_mean)))
+
+
+def sw_stat(x):
+    return
+
+
+def x_diff(x):
+    return x - np.mean(x)
+
+
+def x_ratio(x):
+    return x / np.mean(x)
+
+
+def z_score(x):
+    return (x - np.mean(x)) / np.std(x)
+
+
+def freq1ratio(x):
+    return
+
+
+def freq1count(x):
+    return
+
+
+def entropy_freq(x):
+    return
