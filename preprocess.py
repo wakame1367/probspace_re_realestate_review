@@ -15,14 +15,6 @@ def category_encode(df, target_cols):
 
 def preprocess(df):
     df = cleaning(df)
-    df = built_year(df)
-    df = walk_time(df)
-    df = area1(df)
-    df = area2(df)
-    df = maguchi(df)
-    df = ldk(df)
-    df = num_of_rooms(df)
-    df = nearest_station(df)
     # df = period(df)
     # df = region(df)
     df = total_floor_area_div_area(df)
@@ -39,6 +31,14 @@ def preprocess(df):
 def cleaning(df):
     # zenkaku to hankaku
     df['間取り'] = df['間取り'].map(zen_to_han)
+    df = built_year(df)
+    df = walk_time(df)
+    df = area1(df)
+    df = area2(df)
+    df = maguchi(df)
+    df = ldk(df)
+    df = num_of_rooms(df)
+    df = nearest_station(df)
     return df
 
 
