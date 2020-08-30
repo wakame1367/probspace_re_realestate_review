@@ -4,7 +4,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yaml
+from nyaggle.ensemble import averaging
 from nyaggle.experiment import run_experiment
+from nyaggle.util import make_submission_df
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 
@@ -178,25 +180,34 @@ def main():
     logging_directory = "resources/logs/lightgbm/{time}"
     now = datetime.now().strftime('%Y%m%d_%H%M%S')
     logging_directory = logging_directory.format(time=now)
-    lgb_result = run_experiment(lightgbm_params,
-                                X_train=train,
-                                y=target,
-                                X_test=test,
-                                eval_func=rmse,
-                                cv=kf,
-                                fit_params=fit_params,
-                                logging_directory=logging_directory)
+    results = []
+    # seed averaging
+    for idx in range(3):
+        lightgbm_params['seed'] = idx
+        directory = logging_directory + f'_seed_{idx}'
+        lgb_result = run_experiment(lightgbm_params,
+                                    X_train=train,
+                                    y=target,
+                                    X_test=test,
+                                    eval_func=rmse,
+                                    cv=kf,
+                                    fit_params=fit_params,
+                                    logging_directory=directory)
+        # too long name
+        submission = lgb_result.submission_df
+        submission[target_col] = submission[target_col].map(np.expm1)
+        # replace minus values to 0
+        _indexes = submission[submission[target_col] < 0].index
+        submission.loc[_indexes, target_col] = 0
+        lgb_result.submission_df = submission
+        results.append(lgb_result)
 
-    # too long name
-    submission = lgb_result.submission_df
-    submission[target_col] = submission[target_col].map(np.expm1)
-    # replace minus values to 0
-    _indexes = submission[submission[target_col] < 0].index
-    submission.loc[_indexes, target_col] = 0
-    # index 0 to 1
-    submission["id"] += 1
     sub_path = Path(logging_directory) / "{}.csv".format(now)
-    submission.to_csv(sub_path, index=False)
+    ensemble = averaging([result.test_prediction for result in results])
+    sub = make_submission_df(ensemble.test_prediction)
+    # index 0 to 1
+    sub["id"] += 1
+    sub.to_csv(sub_path, index=False)
 
 
 if __name__ == '__main__':
