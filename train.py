@@ -10,7 +10,8 @@ from nyaggle.util import make_submission_df
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
 
-from preprocess import preprocess, category_encode, preprocess_land_price
+from preprocess import preprocess, category_encode, preprocess_land_price, \
+    aggregation
 
 data_path = Path("resources")
 
@@ -125,7 +126,16 @@ def main():
                         for year in [3, 5]]
     # count / std / var はfeatureimpが低いため除外
     agg_funcs = ["sum", "min", "max", "mean"]
-    for _ in land_price_rates + [land_price_col]:
+    target_cols = land_price_rates + [land_price_col]
+    # Memory Error
+    # for merge_key in merge_keys:
+    #     agg_df, new_cols = aggregation(land_price[[merge_key] + target_cols],
+    #                                    group_key=merge_key,
+    #                                    group_values=target_cols,
+    #                                    agg_methods=agg_funcs)
+    #     _all = pd.merge(_all, agg_df[[merge_key] + new_cols], on=merge_key,
+    #                     how='left')
+    for _ in target_cols:
         for merge_key in merge_keys:
             group_aggs = land_price.groupby(merge_key)[_].agg(
                 agg_funcs)
