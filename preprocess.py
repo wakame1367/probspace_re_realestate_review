@@ -66,7 +66,8 @@ def preprocess(df):
 
 def cleaning(df):
     # zenkaku to hankaku
-    df['間取り'] = df['間取り'].map(zen_to_han)
+    df['FloorPlan'] = df['FloorPlan'].fillna('NaN')
+    df['FloorPlan'] = df['FloorPlan'].map(zen_to_han)
     df = built_year(df)
     df = walk_time(df)
     df = area1(df)
